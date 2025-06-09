@@ -92,6 +92,12 @@ wasm = [
   "dep:js-sys",
 ]
 
+ios = [
+  "tract",
+  "default-model",
+  "dep:ndarray",
+]
+
 android = [
   "tract",
   "default-model",

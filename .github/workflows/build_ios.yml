@@ -1,0 +1,92 @@
+name: Build framework as iOS SPM
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_kind:
+        type: string
+        description: 'Version to release (in semantic versioning format):'
+        required: true
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+
+          if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Error: The version '$VERSION' is not in the correct format"
+            echo "Is required to input a version name in semantic versioning format (es: 1.2.3)"
+            exit 1
+          fi
+
+          git fetch --tags
+          if git tag -l | grep -q "^v$VERSION$"; then
+            echo "❌ Error: The version v$VERSION is already present"
+            exit 1
+          fi
+
+          echo "✅ Version $VERSION validated with success"
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Add iOS targets
+        run: |
+          rustup target add aarch64-apple-ios
+          rustup target add x86_64-apple-ios
+          rustup target add aarch64-apple-ios-sim
+
+      - name: Clean
+        working-directory: ./libDF
+        run: cargo clean
+
+      - name: Build iOS libraries
+        run: . ios_xcframework.sh
+        working-directory: ./libDF
+
+      - name: Zip XCFramework
+        working-directory: ./Binaries
+        run: zip -r DeepFilterNet.xcframework.zip DeepFilterNet.xcframework
+
+      - name: Update Package.swift
+        run: |
+          CHECKSUM=$(swift package compute-checksum ./Binaries/DeepFilterNet.xcframework.zip)
+          sed -i '' "s|url: \".*\"|url: \"https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.version }}/DeepFilterNet.xcframework.zip\"|g" Package.swift
+          sed -i '' "s|checksum: \".*\"|checksum: \"$CHECKSUM\"|g" Package.swift
+
+      - name: Commit Package.swift changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Package.swift
+          git commit -m "Update Package.swift for release ${{ github.ref_name }}"
+          git push
+          git tag ${{ github.event.inputs.version }}
+          git push origin ${{ github.event.inputs.version }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: Release ${{ github.event.inputs.version }}
+
+      - name: Upload XCFramework
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Binaries/DeepFilterNet.xcframework.zip
+          asset_name: DeepFilterNet.xcframework.zip
+          asset_content_type: application/zip
