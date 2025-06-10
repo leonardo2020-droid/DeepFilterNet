@@ -1,4 +1,4 @@
-name: Build framework as iOS SPM
+name: Build as iOS xcframework
 
 on:
   workflow_dispatch:
