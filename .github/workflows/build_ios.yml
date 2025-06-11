@@ -43,5 +43,5 @@ jobs:
       - name: Upload framework
         uses: actions/upload-artifact@v4
         with:
-          name: DeepFilterNet.xcframework.zip
+          name: Binaries
           path: ./Binaries/DeepFilterNet.xcframework.zip
