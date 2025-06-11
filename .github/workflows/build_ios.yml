@@ -35,8 +35,13 @@ jobs:
         run: . ios_xcframework.sh
         working-directory: ./libDF
 
+      - name: Zip XCFramework
+        working-directory: ./Binaries
+        run: |
+          zip -r DeepFilterNet.xcframework.zip DeepFilterNet.xcframework
+
       - name: Upload framework
         uses: actions/upload-artifact@v4
         with:
-          name: DeepFilterNet.xcframework
-          path: ./Binaries/DeepFilterNet.xcframework
+          name: DeepFilterNet.xcframework.zip
+          path: ./Binaries/DeepFilterNet.xcframework.zip
