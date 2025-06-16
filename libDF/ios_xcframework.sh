@@ -144,6 +144,19 @@ cat > ../xcframework-build/out/device/DeepFilterNet.framework/Info.plist << EOL
     <string>1</string>
     <key>MinimumOSVersion</key>
     <string>13.0</string>
+    <key>UIDeviceFamily</key>
+    <array>
+      <integer>1</integer>
+      <integer>2</integer>
+    </array>
+    <key>NSPrincipalClass</key>
+    <string></string>
+    <key>DTPlatformName</key>
+    <string>iphoneos</string>
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+      <string>iPhoneOS</string>
+    </array>
 </dict>
 </plist>
 EOL
