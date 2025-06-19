@@ -36,6 +36,12 @@ jobs:
         run: cargo ndk -t armeabi-v7a -t arm64-v8a -t x86 -t x86_64 -o android-libs-build build --features android --release
         working-directory: ./libDF
 
+      - name: Verify built .so files 16 kb alignment
+        run: |
+          LLVM_READELF_PATH=$(find $ANDROID_NDK_HOME -name llvm-readelf | head -n 1)
+          $LLVM_READELF_PATH -l android-libs-build/arm64-v8a/libdf.so | grep 'R E' | grep '0x4000$' || (echo "Alignment check failed for arm64-v8a" && exit 1)
+        working-directory: ./libDF
+
       - name: Upload native Android libraries
         uses: actions/upload-artifact@v4
         with:
