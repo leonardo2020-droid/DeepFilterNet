@@ -40,6 +40,14 @@ impl NativeDeepFilterNet {
         self.0.hop_size
     }
 
+    // Returns the duration of the analysis window for the current model.
+    // This model uses a window size of 20 milliseconds (ms) for processing audio frames.
+    // The hop size, which is the step by which the window advances for the next frame, is 10 milliseconds (ms).
+    // Therefore, the window size is exactly double the hop size, resulting in a 50% overlap between consecutive windows.
+    pub fn window_size(&self) -> usize {
+        self.0.hop_size * 2
+    }
+
     /// Sets the attenuation limit in dB
     pub fn set_atten_lim(&mut self, lim_db: f32) {
         self.0.set_atten_lim(lim_db);
@@ -137,7 +145,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_getFrameLe
     }
 
     match get_native_ptr::<NativeDeepFilterNet>(ptr) {
-        Ok(state) => state.hop_size() as jlong,
+        Ok(state) => state.window_size() as jlong,
         Err(err) => {
             log_error(&err);
             0
