@@ -227,25 +227,34 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
 
     if !is_direct {
         log_error("ByteBuffer must be direct");
-        return -1; // Error code for non-direct buffer
+        return -20; // Error code for non-direct buffer
     }
 
     let byte_buffer = unsafe { JByteBuffer::from_raw(byte_buffer.into_raw()) };
+
+    let buffer_capacity = match env.get_direct_buffer_capacity(&byte_buffer) {
+        Ok(capacity) => capacity,
+        Err(e) => {
+            log_error(&format!("Failed to get direct buffer capacity: {:?}", e));
+            return -30;
+        }
+    };
+
+    if buffer_capacity != state.window_size() {
+        log_error(&format!(
+            "Invalid size for the ByteBuffer. Expected: {}, Got: {}",
+            state.window_size(),
+            buffer_capacity
+        ));
+        return -40;
+    }
 
     // Get buffer pointer and capacity
     let buffer_ptr = match env.get_direct_buffer_address(&byte_buffer) {
         Ok(ptr) => ptr as *mut i16,
         Err(e) => {
             log_error(&format!("Failed to get direct buffer address: {:?}", e));
-            return -2;
-        }
-    };
-
-    let buffer_capacity = match env.get_direct_buffer_capacity(&byte_buffer) {
-        Ok(capacity) => capacity,
-        Err(e) => {
-            log_error(&format!("Failed to get direct buffer capacity: {:?}", e));
-            return -3;
+            return -50;
         }
     };
 
@@ -269,7 +278,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         Ok(lsnr) => lsnr,
         Err(e) => {
             log_error(&format!("Failed to process audio frame: {:?}", e));
-            return -5;
+            return -60;
         }
     };
 
@@ -278,7 +287,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         Some(slice) => slice,
         None => {
             log_error("Failed to get output as slice");
-            return -6;
+            return -70;
         }
     };
 
