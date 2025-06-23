@@ -207,7 +207,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
     _: jclass,
     ptr: jlong,
     byte_buffer: JObject<'a>
-) -> jint {
+) -> jfloat {
     use jni_helpers::*;
 
     // Get the NativeDeepFilterNet instance
@@ -215,7 +215,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         Ok(state) => state,
         Err(err) => {
             log_error(&err);
-            return -10;
+            return -10f;
         }
     };
 
@@ -227,7 +227,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
 
     if !is_direct {
         log_error("ByteBuffer must be direct");
-        return -20; // Error code for non-direct buffer
+        return -20f; // Error code for non-direct buffer
     }
 
     let byte_buffer = unsafe { JByteBuffer::from_raw(byte_buffer.into_raw()) };
@@ -236,7 +236,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         Ok(capacity) => capacity,
         Err(e) => {
             log_error(&format!("Failed to get direct buffer capacity: {:?}", e));
-            return -30;
+            return -30f;
         }
     };
 
@@ -246,7 +246,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
             state.window_size(),
             buffer_capacity
         ));
-        return -40;
+        return -40f;
     }
 
     // Get buffer pointer and capacity
@@ -254,7 +254,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         Ok(ptr) => ptr as *mut i16,
         Err(e) => {
             log_error(&format!("Failed to get direct buffer address: {:?}", e));
-            return -50;
+            return -50f;
         }
     };
 
@@ -278,7 +278,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         Ok(lsnr) => lsnr,
         Err(e) => {
             log_error(&format!("Failed to process audio frame: {:?}", e));
-            return -60;
+            return -60f;
         }
     };
 
@@ -287,7 +287,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         Some(slice) => slice,
         None => {
             log_error("Failed to get output as slice");
-            return -70;
+            return -70f;
         }
     };
 
@@ -299,7 +299,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         }
     }
 
-    // Return the LSNR (Level of Suppressed Noise Ratio) as an integer value
-    (lsnr * 100.0) as jint
+    // Return the LSNR (Level of Suppressed Noise Ratio)
+    lsnr as jfloat
 }
 
