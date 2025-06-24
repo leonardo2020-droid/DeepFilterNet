@@ -37,15 +37,8 @@ impl NativeDeepFilterNet {
 
     /// Returns the hop size of the current model
     pub fn hop_size(&self) -> usize {
+        // Hop size: 480 samples for 10ms at 48kHz.
         self.0.hop_size
-    }
-
-    // Returns the duration of the analysis window for the current model.
-    // This model uses a window size of 20 milliseconds (ms) for processing audio frames.
-    // The hop size, which is the step by which the window advances for the next frame, is 10 milliseconds (ms).
-    // Therefore, the window size is exactly double the hop size, resulting in a 50% overlap between consecutive windows.
-    pub fn window_size(&self) -> usize {
-        self.0.hop_size * 2
     }
 
     /// Sets the attenuation limit in dB
@@ -56,6 +49,12 @@ impl NativeDeepFilterNet {
     /// Sets the post-filter beta value
     pub fn set_pf_beta(&mut self, beta: f32) {
         self.0.set_pf_beta(beta);
+    }
+
+    /// Returns the hop size of the current model
+    pub fn frame_bytes(&self) -> usize {
+        // For 16-bit PCM, this equates to 960 bytes (480 samples * 2 bytes/sample).
+        self.0.hop_size * 2
     }
 }
 
@@ -145,7 +144,7 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_getFrameLe
     }
 
     match get_native_ptr::<NativeDeepFilterNet>(ptr) {
-        Ok(state) => state.window_size() as jlong,
+        Ok(state) => state.frame_bytes() as jlong,
         Err(err) => {
             log_error(&err);
             0
@@ -240,10 +239,10 @@ pub extern "C" fn Java_com_rikorose_deepfilternet_NativeDeepFilterNet_processFra
         }
     };
 
-    if buffer_capacity != state.window_size() {
+    if buffer_capacity != state.frame_bytes() {
         log_error(&format!(
             "Invalid size for the ByteBuffer. Expected: {}, Got: {}",
-            state.window_size(),
+            state.frame_bytes(),
             buffer_capacity
         ));
         return -40 as jfloat;
