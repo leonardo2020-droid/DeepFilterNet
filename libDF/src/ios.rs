@@ -87,9 +87,14 @@ pub unsafe extern "C" fn df_set_post_filter_beta(st: *mut DFState, beta: f32) {
 pub unsafe extern "C" fn df_process_frame(
     st: *mut DFState,
     input: *mut i16,
+    frame_size: usize,
 ) -> c_float {
     let state = st.as_mut().expect("Invalid pointer");
-    let hop_size = state.0.hop_size; // 480
+    let hop_size = state.0.hop_size; // 512
+
+    if frame_size != hop_size {
+        return -1.0;
+    }
 
     let mut result: c_float = 0.0;
 

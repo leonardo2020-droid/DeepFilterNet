@@ -78,7 +78,8 @@ void df_set_post_filter_beta(DFState* state, float beta);
  */
 float df_process_frame(
     DFState* state,
-    const int16_t* input
+    const int16_t* input,
+    int frameSize
 );
 
 /**
