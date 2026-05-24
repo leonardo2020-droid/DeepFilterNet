@@ -100,7 +100,7 @@ ios = [
 
 android = [
   "tract",
-  "default-model",
+  "default-model-ll",
   "dep:ndarray",
   'dep:jni',
   "dep:log",
